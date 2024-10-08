@@ -17,7 +17,8 @@ class AppleMusicDiscordRPC {
     public readonly appName: iTunesAppName,
     public readonly rpc: Client,
     public readonly kv: Deno.Kv,
-    public readonly defaultTimeout: number
+    public readonly defaultTimeout: number,
+    private lastActivity?: Activity
   ) {}
 
   async run(): Promise<void> {
@@ -99,13 +100,22 @@ class AppleMusicDiscordRPC {
         }
 
         await this.rpc.setActivity(activity);
+        this.lastActivity = activity; 
         return Math.min(
           (delta ?? this.defaultTimeout) + 1000,
           this.defaultTimeout
         );
       }
+      // New pause logic, doesnt clear presence unless music is stopped (i.e. you quit the app)
+      case "paused": {
+        if (this.lastActivity) {
+          this.lastActivity.state = "Paused";
+          delete this.lastActivity.timestamps?.end; 
+          await this.rpc.setActivity(this.lastActivity);
+        }
+        return this.defaultTimeout;
+      }
 
-      case "paused":
       case "stopped": {
         await this.rpc.clearActivity();
         return this.defaultTimeout;
