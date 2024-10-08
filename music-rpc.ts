@@ -110,16 +110,23 @@ class AppleMusicDiscordRPC {
       case "paused": {
         if (this.lastActivity?.details) {  
           let details = this.lastActivity.details;
-          if (details.includes(" (Paused)")) {
-            details = details.replace(" (Paused)", "");
+          if (!details.includes(" (Paused)")) {
+            details = AppleMusicDiscordRPC.truncateString(`${details} (Paused)`);
           }
           
-          this.lastActivity.details = AppleMusicDiscordRPC.truncateString(
-            `${details} (Paused)`
-          );
+          const pausedActivity: Activity = {
+            ...this.lastActivity,
+            details,
+            timestamps: this.lastActivity.timestamps
+              ? {
+                  start: this.lastActivity.timestamps.end,
+                  end: this.lastActivity.timestamps.end
+                }
+              : undefined
+          };
           
-          delete this.lastActivity.timestamps;
-          await this.rpc.setActivity(this.lastActivity);
+          await this.rpc.setActivity(pausedActivity);
+          this.lastActivity = pausedActivity;
         }
         return this.defaultTimeout;
       }
