@@ -108,9 +108,17 @@ class AppleMusicDiscordRPC {
       }
       // New pause logic, doesnt clear presence unless music is stopped (i.e. you quit the app)
       case "paused": {
-        if (this.lastActivity) {
-          this.lastActivity.state = "Paused";
-          delete this.lastActivity.timestamps?.end;
+        if (this.lastActivity?.details) {  
+          let details = this.lastActivity.details;
+          if (details.includes(" (Paused)")) {
+            details = details.replace(" (Paused)", "");
+          }
+          
+          this.lastActivity.details = AppleMusicDiscordRPC.truncateString(
+            `${details} (Paused)`
+          );
+          
+          delete this.lastActivity.timestamps;
           await this.rpc.setActivity(this.lastActivity);
         }
         return this.defaultTimeout;
