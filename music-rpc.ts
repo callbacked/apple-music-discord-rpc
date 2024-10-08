@@ -110,12 +110,12 @@ class AppleMusicDiscordRPC {
       case "paused": {
         if (this.lastActivity) {
           this.lastActivity.state = "Paused";
-          delete this.lastActivity.timestamps?.end; 
+          delete this.lastActivity.timestamps?.end;
           await this.rpc.setActivity(this.lastActivity);
         }
         return this.defaultTimeout;
       }
-
+      
       case "stopped": {
         await this.rpc.clearActivity();
         return this.defaultTimeout;
